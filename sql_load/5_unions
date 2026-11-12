@@ -1,0 +1,97 @@
+Select 
+    job_title_short,
+    company_id,
+    job_location
+from january_jobs
+
+UNION
+
+Select job_title_short,
+    company_id,
+       job_location 
+from february_jobs
+
+UNION
+
+Select job_title_short,
+       company_id,
+       job_location 
+from march_jobs;
+
+-- UNION ALL
+
+Select 
+    job_title_short,
+    company_id,
+    job_location
+from january_jobs
+
+UNION ALL
+
+Select job_title_short,
+    company_id,
+       job_location 
+from february_jobs
+
+select * from skills_dim limit 5
+select * from job_postings_fact limit 5
+
+--Practice Problem
+
+--1. Way1
+
+-- Part 1: Skill names and types for Q1 jobs with a salary > $70,000 that HAVE skills
+SELECT 
+    skills_dim.skills AS skill_name,
+    skills_dim.type AS skill_type
+FROM 
+    job_postings_fact AS job_postings
+INNER JOIN skills_job_dim 
+    ON job_postings.job_id = skills_job_dim.job_id
+INNER JOIN skills_dim 
+    ON skills_job_dim.skill_id = skills_dim.skill_id
+WHERE 
+    EXTRACT(QUARTER FROM job_postings.job_posted_date) = 1
+    AND job_postings.salary_year_avg > 70000
+
+UNION
+
+-- Part 2: Placeholder for Q1 jobs with a salary > $70,000 that DO NOT have skills
+SELECT 
+    NULL AS skill_name,
+    NULL AS skill_type
+FROM 
+    job_postings_fact AS job_postings
+WHERE 
+    EXTRACT(QUARTER FROM job_postings.job_posted_date) = 1
+    AND job_postings.salary_year_avg > 70000
+    AND job_postings.job_id NOT IN (
+        SELECT job_id FROM skills_job_dim
+    );
+
+
+-- 2. Way2
+
+Select * from job_postings_fact
+
+SELECT 
+    job_title_short,
+    job_location,
+    job_via,
+    job_posted_date::DATE,
+    salary_year_avg
+FROM (
+Select*
+FROM january_jobs
+UNION ALL 
+SELECT* 
+FROM february_jobs
+UNION ALL 
+SELECT*
+FROM march_jobs
+) as quarter1_job_postings
+WHERE 
+    salary_year_avg > 70000 AND 
+    job_title_short = 'Data Analyst'
+ORDER BY 
+    salary_year_avg DESC
